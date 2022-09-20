@@ -13,7 +13,6 @@ except ImportError:
 from six import string_types, itervalues, iteritems, iterkeys
 
 from flask import current_app
-from werkzeug.routing import parse_rule
 
 from . import fields
 from .model import Model, ModelBase
@@ -68,6 +67,37 @@ def extract_path(path):
     Transform a Flask/Werkzeug URL pattern in a Swagger one.
     '''
     return RE_URL.sub(r'{\1}', path)
+
+
+def parse_rule(rule):
+    """Parse a rule and return it as generator. Each iteration yields tuples
+    in the form ``(converter, arguments, variable)``. If the converter is
+    `None` it's a static url part, otherwise it's a dynamic one.
+    :internal:
+    """
+    pos = 0
+    end = len(rule)
+    do_match = _rule_re.match
+    used_names = set()
+    while pos < end:
+        m = do_match(rule, pos)
+        if m is None:
+            break
+        data = m.groupdict()
+        if data["static"]:
+            yield None, None, data["static"]
+        variable = data["variable"]
+        converter = data["converter"] or "default"
+        if variable in used_names:
+            raise ValueError("variable name %r used twice." % variable)
+        used_names.add(variable)
+        yield converter, data["args"] or None, variable
+        pos = m.end()
+    if pos < end:
+        remaining = rule[pos:]
+        if ">" in remaining or "<" in remaining:
+            raise ValueError("malformed url rule: %r" % rule)
+        yield None, None, remaining
 
 
 def extract_path_params(path):

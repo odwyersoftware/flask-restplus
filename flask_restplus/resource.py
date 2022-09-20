@@ -3,7 +3,10 @@ from __future__ import unicode_literals
 
 from flask import request
 from flask.views import MethodView
-from werkzeug.wrappers import BaseResponse
+try:
+    from werkzeug.wrappers import BaseResponse
+except ImportError:
+    from werkzeug.wrappers import Response as BaseResponse
 
 from .model import ModelBase
 

@@ -25,10 +25,16 @@ from flask.signals import got_request_exception
 
 from jsonschema import RefResolver
 
-from werkzeug import cached_property
+try:
+    from werkzeug import cached_property
+except ImportError:
+    from werkzeug.utils import cached_property
 from werkzeug.datastructures import Headers
 from werkzeug.exceptions import HTTPException, MethodNotAllowed, NotFound, NotAcceptable, InternalServerError
-from werkzeug.wrappers import BaseResponse
+try:
+    from werkzeug.wrappers import BaseResponse
+except ImportError:
+    from werkzeug.wrappers import Response as BaseResponse
 
 from . import apidoc
 from .mask import ParseError, MaskError
